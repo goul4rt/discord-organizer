@@ -1,0 +1,22 @@
+{
+  "name": "discord-organizer",
+  "version": "1.0.0",
+  "description": "Organiza os servidores da sua conta do Discord em pastas por assunto, com IA, e silencia tudo menos menções diretas",
+  "scripts": {
+    "test": "node organizar.mjs test",
+    "scan": "node --env-file=.env organizar.mjs scan",
+    "report": "node organizar.mjs report",
+    "apply": "node --env-file=.env organizar.mjs apply",
+    "notify": "node --env-file=.env organizar.mjs notify",
+    "notify-reset": "node --env-file=.env organizar.mjs notify-reset"
+  },
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
+    "zod": "^4.6.5"
+  },
+  "engines": {
+    "node": ">=20.6"
+  }
+}

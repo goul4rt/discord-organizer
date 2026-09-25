@@ -1,0 +1,7 @@
+node_modules
+.env
+dados.json
+plano.json
+relatorio.md
+backup-pastas-*.json
+*.log

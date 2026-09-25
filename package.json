@@ -1,14 +1,14 @@
 {
   "name": "discord-organizer",
   "version": "1.0.0",
-  "description": "Organiza os servidores da sua conta do Discord em pastas por assunto, com IA, e silencia tudo menos menções diretas",
+  "description": "Sort every Discord server you're in into sidebar folders by topic with AI, and mute everything except direct mentions",
   "scripts": {
-    "test": "node organizar.mjs test",
-    "scan": "node --env-file=.env organizar.mjs scan",
-    "report": "node organizar.mjs report",
-    "apply": "node --env-file=.env organizar.mjs apply",
-    "notify": "node --env-file=.env organizar.mjs notify",
-    "notify-reset": "node --env-file=.env organizar.mjs notify-reset"
+    "test": "node organize.mjs test",
+    "scan": "node --env-file=.env organize.mjs scan",
+    "report": "node organize.mjs report",
+    "apply": "node --env-file=.env organize.mjs apply",
+    "notify": "node --env-file=.env organize.mjs notify",
+    "notify-reset": "node --env-file=.env organize.mjs notify-reset"
   },
   "license": "MIT",
   "type": "module",
@@ -18,5 +18,12 @@
   },
   "engines": {
     "node": ">=20.6"
-  }
+  },
+  "keywords": [
+    "discord",
+    "selfbot",
+    "server-folders",
+    "claude",
+    "ai"
+  ]
 }

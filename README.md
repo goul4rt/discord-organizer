@@ -1,41 +1,41 @@
 # discord-organizer
 
-Você está em 170 servidores do Discord, a barra lateral virou um paredão de ícones e você não lembra metade do que cada um é. Este script resolve isso:
+You're in 170 Discord servers, your sidebar is a wall of icons, and you've forgotten what half of them are. This script fixes that:
 
-1. **Lê seus servidores**: canais, tópicos, algumas mensagens recentes e quanto cada um anda movimentado.
-2. **Pede para o Claude dizer o que cada servidor é** e agrupar tudo em pastas por assunto (Dev, Games, Anime, Minecraft...).
-3. **Gera um relatório** para você revisar e ajustar antes de mudar qualquer coisa.
-4. **Cria as pastas na sua barra lateral**, com backup da organização anterior.
-5. Opcional: **silencia todos os servidores** e deixa passar só as menções diretas a você.
+1. **Reads your servers**: channels, topics, a few recent messages, and how active each one is.
+2. **Asks Claude what each server is** and groups them into folders by topic (Dev, Games, Anime, Minecraft...).
+3. **Writes a report** you can review and tweak before anything changes.
+4. **Builds the folders in your sidebar**, backing up your old layout first.
+5. Optional: **mutes every server** and lets through only messages that mention you directly.
 
-Um script, duas dependências, sem servidor e sem banco.
+One script, two dependencies. No server, no database.
 
-## ⚠️ Leia antes de usar
+## ⚠️ Read this first
 
-Este script usa o **token da sua conta de usuário**, e não o de um bot. Isso é o que se chama de *selfbot*, e **os Termos de Serviço do Discord proíbem**. Sua conta pode ser suspensa ou banida. Use por sua conta e risco.
+This uses your **user account token**, not a bot token. That's what's called a *selfbot*, and it's **against Discord's Terms of Service**. Your account could get suspended or banned. Use at your own risk.
 
-Não dá para fazer isso com bot oficial: as pastas da barra lateral e as notificações são configurações da **sua conta**, e um bot não enxerga nem mexe nelas.
+A regular bot can't do this job: sidebar folders and notification settings belong to **your account**, and bots can't see or change them.
 
-O script tenta deixar pouco rastro:
+The script tries to leave as small a footprint as it can:
 
-- intervalo aleatório de 1,5 a 4 s entre requisições, sem ritmo fixo;
-- uma única tentativa de ler mensagens por servidor;
-- se o Discord pedir para esperar (429), espera o dobro do tempo;
-- a coleta roda uma vez e é reaproveitada (`dados.json`);
-- a organização em pastas é gravada numa única requisição, e as notificações também;
-- **nunca** envia mensagem, reage, entra ou sai de servidor.
+- random 1.5–4 s gap between requests, never a fixed rhythm;
+- a single attempt to read messages per server;
+- when Discord says to wait (429), it waits twice as long;
+- data is collected once and reused (`data.json`);
+- applying all the folders takes a single request, and so does changing notifications;
+- it **never** sends messages, reacts, joins, or leaves servers.
 
-Mesmo assim, o risco não é zero. Não rode em loop nem em horário agendado.
+The risk still isn't zero. Don't run it in a loop or on a schedule.
 
-**Privacidade:** para classificar os servidores, os nomes dos canais e trechos de mensagens recentes são enviados para a API da Anthropic. Se não quiser isso, veja [Sem chave da Anthropic](#sem-chave-da-anthropic).
+**Privacy:** to classify your servers, channel names and snippets of recent messages are sent to the Anthropic API. If you don't want that, see [Without an Anthropic key](#without-an-anthropic-key).
 
-## Requisitos
+## Requirements
 
-- Node.js 20.6 ou mais novo (por causa do `--env-file`)
-- Seu token do Discord
-- Uma API key da Anthropic ([console.anthropic.com](https://console.anthropic.com)). Opcional, veja abaixo.
+- Node.js 20.6+ (for `--env-file`)
+- Your Discord token
+- An Anthropic API key from [console.anthropic.com](https://console.anthropic.com). This one is optional, see below.
 
-## Instalação
+## Setup
 
 ```bash
 git clone https://github.com/goul4rt/discord-organizer
@@ -44,125 +44,127 @@ npm install
 cp .env.example .env
 ```
 
-Preencha o `.env`, uma variável por linha:
+Fill in `.env`, one variable per line:
 
 ```env
-DISCORD_TOKEN=seu_token_aqui
+DISCORD_TOKEN=your_token_here
 ANTHROPIC_API_KEY=sk-ant-api03-...
 ```
 
-### Como pegar o token do Discord
+### Getting your Discord token
 
-1. Abra o Discord **no navegador** (discord.com/app) e faça login.
-2. Abra o DevTools (F12) e vá na aba **Network** (Rede).
-3. Clique em qualquer canal para gerar tráfego e filtre por `api`.
-4. Clique numa requisição e, em **Request Headers**, copie o valor de `authorization`.
+1. Open Discord **in the browser** (discord.com/app) and log in.
+2. Open DevTools (F12) and go to the **Network** tab.
+3. Click any channel to generate traffic, then filter by `api`.
+4. Click a request and copy the value of `authorization` under **Request Headers**.
 
-> O token dá acesso total à sua conta. Não cole em lugar nenhum, não faça commit, não mande para ninguém. Se vazar, **troque a senha do Discord**: isso invalida o token na hora.
+> Your token gives full access to your account. Don't paste it anywhere, don't commit it, don't send it to anyone. If it leaks, **change your Discord password**: that invalidates the token right away.
 
-## Como usar
+## Usage
 
-### 1. Coletar e classificar
+### 1. Collect and classify
 
 ```bash
 npm run scan
 ```
 
-Leva alguns minutos: são 2 requisições por servidor, com as pausas aleatórias. No fim, você terá:
+This takes a few minutes: about 2 requests per server, with the random pauses. When it finishes you get:
 
-- `dados.json`: o que foi coletado. Nas próximas execuções ele é reaproveitado. Apague o arquivo para coletar de novo.
-- `plano.json`: em que pasta cada servidor vai.
-- `relatorio.md`: uma tabela por pasta com o que cada servidor é, a movimentação, o número de membros e há quantos dias está sem mensagens.
+- `data.json`: everything that was collected. Later runs reuse it. Delete it to collect again.
+- `plan.json`: which folder each server goes into.
+- `report.md`: one table per folder showing what each server is, how active it is, member count, and days since the last message.
 
-Exemplo de relatório:
+A report looks like this:
 
-| Servidor | O que é | Movimento | Membros | Dias sem msg |
+| Server | What it is | Activity | Members | Days since last msg |
 |---|---|---|---|---|
-| Discord Developers | Oficial: API, bots, Activities, Social SDK | muito ativo | 304690 | 0 |
-| Hytale Brasil | Maior comunidade BR de Hytale | ativo | 4718 | 0 |
-| Survale | Servidor de Hytale que não vingou | parado | 41 | 182 |
+| Discord Developers | Official Discord API, bots, Activities and Social SDK | very active | 304690 | 0 |
+| Hytale Brasil | Largest Brazilian Hytale community | active | 4718 | 0 |
+| Survale | Hytale server that never took off | dead | 41 | 182 |
 
-### 2. Revisar
+Folder names and descriptions come out in whatever language most of your servers use.
 
-Abra o `relatorio.md`. Para mudar um servidor de pasta, edite o campo `pasta` dele no `plano.json`. Para criar ou renomear pastas, mexa na lista `pastas`. Depois gere o relatório de novo para conferir:
+### 2. Review
+
+Open `report.md`. To move a server, change its `folder` in `plan.json`. To rename or add folders, edit the `folders` list. Then rebuild the report to check:
 
 ```bash
 npm run report
 ```
 
-### 3. Aplicar as pastas
+### 3. Apply the folders
 
 ```bash
 npm run apply
 ```
 
-Antes de mudar qualquer coisa, o script salva a organização atual em `backup-pastas-<timestamp>.json`. Servidores que não estão no plano ficam soltos, fora das pastas.
+Before touching anything, your current layout is saved to `backup-folders-<timestamp>.json`. Servers that aren't in the plan stay loose, outside any folder.
 
-### 4. (Opcional) Só menções diretas
+### 4. (Optional) Direct mentions only
 
 ```bash
 npm run notify
 ```
 
-Em todos os servidores, isso configura:
+This changes four settings on every server:
 
-- **Silenciar o servidor:** some a bolinha de "não lido".
-- **Notificar:** só menções.
-- **Ignorar @everyone e @here.**
-- **Ignorar menções de cargo.**
+- **Mute the server:** no more unread dots.
+- **Notifications:** only @mentions.
+- **Ignore @everyone and @here.**
+- **Ignore role mentions.**
 
-Resultado: você só é notificado quando alguém marca **você**. O contador vermelho de menção continua aparecendo em servidores silenciados.
+You only get notified when someone mentions **you**. Muted servers still show the red mention badge.
 
-## Desfazer
+## Undo
 
 ```bash
-# volta as pastas para como estavam antes do apply
-node --env-file=.env organizar.mjs restore backup-pastas-<timestamp>.json
+# put the folders back the way they were before apply
+node --env-file=.env organize.mjs restore backup-folders-<timestamp>.json
 
-# volta as notificações para o padrão de cada servidor
+# reset notifications to each server's default
 npm run notify-reset
 ```
 
-Não existe backup das configurações de notificação anteriores. O `notify-reset` volta tudo para o padrão de cada servidor.
+Your previous notification settings aren't backed up. `notify-reset` goes back to each server's default.
 
-## Sem chave da Anthropic
+## Without an Anthropic key
 
-Sem `ANTHROPIC_API_KEY`, o `scan` só coleta os dados, salva o `dados.json` e para. A partir daí você pode:
+Without `ANTHROPIC_API_KEY`, `scan` only collects: it saves `data.json` and stops. From there you can:
 
-- pedir para o [Claude Code](https://claude.com/claude-code) (ou outra IA) ler o `dados.json` e gerar o `plano.json` no formato abaixo;
-- ou montar o `plano.json` à mão.
+- ask [Claude Code](https://claude.com/claude-code) (or any other AI) to read `data.json` and write `plan.json` in the format below;
+- or write `plan.json` by hand.
 
-Depois disso, rode `npm run report` e `npm run apply` normalmente.
+Then run `npm run report` and `npm run apply` as usual.
 
 ```json
 {
-  "pastas": [{ "nome": "Dev & Bots", "descricao": "Bots, programação e IA" }],
-  "servidores": [
-    { "id": "613425648685547541", "pasta": "Dev & Bots", "o_que_e": "Oficial Discord Developers", "movimento": "muito ativo" }
+  "folders": [{ "name": "Dev & Bots", "description": "Bots, programming and AI" }],
+  "servers": [
+    { "id": "613425648685547541", "folder": "Dev & Bots", "what_it_is": "Official Discord Developers server", "activity": "very active" }
   ]
 }
 ```
 
-`movimento` aceita os valores `muito ativo`, `ativo`, `morno` ou `parado`.
+`activity` is one of `very active`, `active`, `lukewarm`, or `dead`.
 
-## Comandos
+## Commands
 
-| Comando | O que faz | Fala com o Discord? |
+| Command | What it does | Talks to Discord? |
 |---|---|---|
-| `npm run scan` | coleta os dados e classifica | sim (leitura) |
-| `npm run report` | gera o `relatorio.md` a partir do `plano.json` | não |
-| `npm run apply` | cria as pastas, com backup | 2 requisições |
-| `npm run notify` | só menções diretas em todos os servidores | 1 requisição |
-| `npm run notify-reset` | volta as notificações ao padrão | 1 requisição |
-| `node --env-file=.env organizar.mjs restore <arquivo>` | restaura as pastas de um backup | 1 requisição |
-| `npm test` | teste da montagem das pastas | não |
+| `npm run scan` | collect data and classify | yes (reads only) |
+| `npm run report` | rebuild `report.md` from `plan.json` | no |
+| `npm run apply` | build the folders, with a backup | 2 requests |
+| `npm run notify` | direct mentions only, on every server | 1 request |
+| `npm run notify-reset` | reset notifications to default | 1 request |
+| `node --env-file=.env organize.mjs restore <file>` | restore folders from a backup | 1 request |
+| `npm test` | check how folders get built | no |
 
-## Limitações
+## Limitations
 
-- As pastas usam o endpoint antigo `PATCH /users/@me/settings`. Ele funciona hoje, mas o Discord pode desativá-lo sem aviso.
-- Nomes de pasta com mais de 32 caracteres são cortados.
-- As cores das pastas seguem uma paleta fixa e não dá para escolher pelo `plano.json`.
+- Folders go through the legacy `PATCH /users/@me/settings` endpoint. It works today, but Discord could turn it off without notice.
+- Folder names longer than 32 characters get cut off.
+- Folder colors come from a fixed palette, and you can't set them in `plan.json`.
 
-## Licença
+## License
 
-MIT. Projeto sem nenhuma ligação com o Discord ou a Anthropic.
+MIT. This project isn't affiliated with Discord or Anthropic.
